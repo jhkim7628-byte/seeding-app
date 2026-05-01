@@ -1,0 +1,65 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --g: #1D9E75;
+  --gd: #0F6E56;
+  --gl: #E6F7F1;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  font-family: 'Noto Sans KR', -apple-system, sans-serif;
+  background: #F4F6F8;
+  color: #2D3748;
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-[#1D9E75] hover:bg-[#0F6E56] text-white font-semibold text-sm px-4 py-1.5 rounded-lg transition-colors;
+  }
+  .btn-ghost {
+    @apply bg-gray-100 hover:bg-gray-200 text-gray-600 font-semibold text-sm px-4 py-1.5 rounded-lg border border-gray-200 transition-colors;
+  }
+  .btn-sm {
+    @apply text-xs px-2 py-1 rounded-md border border-gray-200 bg-white text-gray-600 hover:border-[#1D9E75] hover:text-[#1D9E75] transition-colors cursor-pointer;
+  }
+  .card {
+    @apply bg-white border border-gray-200 rounded-xl shadow-sm;
+  }
+  .card-header {
+    @apply px-4 py-3 border-b border-gray-100 flex items-center justify-between;
+  }
+  .card-title {
+    @apply text-sm font-bold text-gray-900;
+  }
+  .card-body {
+    @apply p-4;
+  }
+  .input {
+    @apply w-full px-3 py-2 border border-gray-200 rounded-lg text-sm font-[inherit] text-gray-800 bg-white focus:outline-none focus:border-[#1D9E75] focus:ring-2 focus:ring-[#1D9E75]/10 transition-colors;
+  }
+  .textarea {
+    @apply w-full px-3 py-2 border border-gray-200 rounded-lg text-sm font-[inherit] text-gray-800 bg-white focus:outline-none focus:border-[#1D9E75] focus:ring-2 focus:ring-[#1D9E75]/10 transition-colors resize-y;
+  }
+  .select {
+    @apply w-full px-3 py-2 border border-gray-200 rounded-lg text-sm font-[inherit] text-gray-800 bg-white focus:outline-none focus:border-[#1D9E75] transition-colors;
+  }
+  .chip {
+    @apply inline-flex items-center text-xs font-medium px-2 py-0.5 rounded-full;
+  }
+  .chip-green { @apply bg-[#E6F7F1] text-[#0F6E56]; }
+  .chip-amber { @apply bg-amber-50 text-amber-800; }
+  .chip-red   { @apply bg-red-50 text-red-800; }
+  .chip-blue  { @apply bg-blue-50 text-blue-800; }
+  .chip-purple{ @apply bg-purple-50 text-purple-800; }
+  .chip-gray  { @apply bg-gray-100 text-gray-600; }
+  .sidebar-item {
+    @apply flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer text-gray-400 text-xs font-medium transition-all hover:bg-white/5 hover:text-white;
+  }
+  .sidebar-item.active {
+    @apply bg-[#1D9E75] text-white;
+  }
+}
