@@ -29,6 +29,16 @@ export async function GET(_: NextRequest, { params }: { params: { id: string } }
 
   const cards = (script.cards || []).filter((c: any) => !c.is_excluded)
 
+  // 단계별 색상 매핑 (타입 안전하게)
+  const stageColorMap: Record<string, string> = {
+    'CTR 훅': '#1D9E75',
+    '공감 스토리': '#BA7517',
+    '전환 브릿지': '#185FA5',
+    'CVR 원물': '#639922',
+    '시간 후기': '#D4537E',
+    '마무리': '#534AB7',
+  }
+
   const html = `<!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -97,15 +107,7 @@ body { font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; color: #
   <div class="section-title">📝 대본 (${cards.length}개 카드)</div>
   ${cards
     .map((card: any, idx: number) => {
-      const stageColor =
-        {
-          'CTR 훅': '#1D9E75',
-          '공감 스토리': '#BA7517',
-          '전환 브릿지': '#185FA5',
-          'CVR 원물': '#639922',
-          '시간 후기': '#D4537E',
-          '마무리': '#534AB7',
-        }[card.stage] || '#888'
+      const stageColor = stageColorMap[card.stage] || '#888'
       return `
       <div class="card">
         <div class="card-header">
@@ -130,10 +132,6 @@ body { font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; color: #
   현신바이오 시딩 캠페인 시스템 · ${new Date().toLocaleString('ko-KR')}
 </div>
 
-<script>
-// 자동으로 print 다이얼로그 띄우기 (선택사항)
-// setTimeout(() => window.print(), 500);
-</script>
 </body>
 </html>`
 
