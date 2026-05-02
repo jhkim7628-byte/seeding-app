@@ -154,7 +154,7 @@ export default function PersonaGenClient() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name: generated.name,
+          persona: generated.name,
           who: generated.who,
           pain: generated.pain,
           pain_scene: generated.pain_scene,
