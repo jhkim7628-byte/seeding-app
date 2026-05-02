@@ -31,6 +31,11 @@ export default function PersonaGenClient() {
   const [loading, setLoading] = useState(false)
   const [editMode, setEditMode] = useState(false)
 
+  // C1: Who 칩 편집용 state
+  const [editingWhoIdx, setEditingWhoIdx] = useState<number | null>(null)
+  const [newWhoFact, setNewWhoFact] = useState('')
+  const [showNewWhoInput, setShowNewWhoInput] = useState(false)
+
   useEffect(() => {
     loadProducts()
   }, [])
@@ -97,7 +102,6 @@ export default function PersonaGenClient() {
       const data = await res.json()
       if (data.pains) {
         setPains(data.pains)
-        // 매우 강함 + 강함 자동 선택
         const autoSelected = data.pains
           .filter((p: PainCandidate) => p.intensity === 'very_strong' || p.intensity === 'strong')
           .map((p: PainCandidate) => p.id)
@@ -174,13 +178,50 @@ export default function PersonaGenClient() {
       })
       const persona = await res.json()
       if (persona.id) {
-        // 장면 상황 후보 페이지로 이동
         router.push(`/script-editor/scenes?persona_id=${persona.id}&product_id=${productId}`)
       }
     } catch (e) {
       alert('저장 실패: ' + (e as Error).message)
     }
     setLoading(false)
+  }
+
+  // C1 Who 헬퍼: 마침표 기준으로 항목 분리
+  const whoFacts = generated
+    ? generated.who.split(/[.。]/).map((s) => s.trim()).filter(Boolean)
+    : []
+
+  function joinWho(facts: string[]) {
+    return facts.length > 0 ? facts.join('. ') + '.' : ''
+  }
+
+  function updateWhoFact(idx: number, newValue: string) {
+    if (!generated) return
+    const trimmed = newValue.trim()
+    if (!trimmed) {
+      removeWhoFact(idx)
+      return
+    }
+    const newFacts = [...whoFacts]
+    newFacts[idx] = trimmed
+    setGenerated({ ...generated, who: joinWho(newFacts) })
+  }
+
+  function removeWhoFact(idx: number) {
+    if (!generated) return
+    const newFacts = whoFacts.filter((_, i) => i !== idx)
+    setGenerated({ ...generated, who: joinWho(newFacts) })
+  }
+
+  function commitNewWhoFact() {
+    if (!generated) return
+    const trimmed = newWhoFact.trim()
+    if (trimmed) {
+      const newFacts = [...whoFacts, trimmed]
+      setGenerated({ ...generated, who: joinWho(newFacts) })
+    }
+    setNewWhoFact('')
+    setShowNewWhoInput(false)
   }
 
   const stepLabels = ['제품 선택', '페르소나명', '핵심 고통', '결과 확인']
@@ -264,18 +305,10 @@ export default function PersonaGenClient() {
                     ✓ 시드 데이터 자동 로드됨
                   </div>
                   <div className="text-[11px] text-green-900 space-y-1">
-                    <div>
-                      <strong>타깃:</strong> {seed.target_description}
-                    </div>
-                    <div>
-                      <strong>구매 이유:</strong> {seed.purchase_reasons.length}개
-                    </div>
-                    <div>
-                      <strong>고통 매핑:</strong> {seed.pain_cause_empathy.length}개 행
-                    </div>
-                    <div>
-                      <strong>핵심 소구점:</strong> {seed.key_selling_points.length}개
-                    </div>
+                    <div><strong>타깃:</strong> {seed.target_description}</div>
+                    <div><strong>구매 이유:</strong> {seed.purchase_reasons.length}개</div>
+                    <div><strong>고통 매핑:</strong> {seed.pain_cause_empathy.length}개 행</div>
+                    <div><strong>핵심 소구점:</strong> {seed.key_selling_points.length}개</div>
                   </div>
                 </div>
               )}
@@ -497,21 +530,88 @@ export default function PersonaGenClient() {
                 )}
               </div>
 
-              {/* 누구 */}
+              {/* C1: 누구 (Who) - 칩 카드 형태 */}
               <div>
-                <div className="text-[10px] font-medium text-gray-500 mb-1">누구 (Who)</div>
-                {editMode ? (
-                  <textarea
-                    value={generated.who}
-                    onChange={(e) => setGenerated({ ...generated, who: e.target.value })}
-                    rows={3}
-                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-xs"
-                  />
-                ) : (
-                  <div className="border border-gray-200 rounded-lg p-2.5 text-[12px] text-gray-700 leading-relaxed">
-                    {generated.who}
+                <div className="flex items-center justify-between mb-1">
+                  <div className="text-[10px] font-medium text-gray-500">
+                    누구 (Who) <span className="text-gray-400">· {whoFacts.length}개 항목</span>
                   </div>
-                )}
+                  <span className="text-[9px] text-gray-400">
+                    클릭하면 수정 · ×로 삭제 · Enter로 저장
+                  </span>
+                </div>
+                <div className="border border-gray-200 rounded-lg p-3 bg-white">
+                  <div className="flex flex-wrap gap-1.5">
+                    {whoFacts.map((fact, idx) => (
+                      <div
+                        key={idx}
+                        className="bg-blue-50 border border-blue-200 rounded-md flex items-center hover:border-blue-400 transition-colors"
+                      >
+                        {editingWhoIdx === idx ? (
+                          <input
+                            type="text"
+                            defaultValue={fact}
+                            autoFocus
+                            onBlur={(e) => {
+                              updateWhoFact(idx, e.target.value)
+                              setEditingWhoIdx(null)
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                updateWhoFact(idx, e.currentTarget.value)
+                                setEditingWhoIdx(null)
+                              }
+                              if (e.key === 'Escape') setEditingWhoIdx(null)
+                            }}
+                            className="text-[11px] bg-white border border-blue-400 rounded px-2 py-1 outline-none min-w-[200px]"
+                          />
+                        ) : (
+                          <>
+                            <span
+                              onClick={() => setEditingWhoIdx(idx)}
+                              className="text-[11px] text-gray-800 cursor-text px-2.5 py-1 select-none"
+                            >
+                              {fact}
+                            </span>
+                            <button
+                              onClick={() => removeWhoFact(idx)}
+                              className="text-blue-300 hover:text-red-500 text-[14px] leading-none px-1.5 py-1 border-l border-blue-200"
+                              title="삭제"
+                            >
+                              ×
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    ))}
+
+                    {showNewWhoInput ? (
+                      <input
+                        type="text"
+                        value={newWhoFact}
+                        onChange={(e) => setNewWhoFact(e.target.value)}
+                        onBlur={commitNewWhoFact}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') commitNewWhoFact()
+                          if (e.key === 'Escape') {
+                            setNewWhoFact('')
+                            setShowNewWhoInput(false)
+                          }
+                        }}
+                        autoFocus
+                        placeholder="예: 결혼 12년차, 자녀 2명"
+                        className="text-[11px] bg-white border border-[#1D9E75] rounded px-2 py-1 outline-none min-w-[200px]"
+                      />
+                    ) : (
+                      <button
+                        onClick={() => setShowNewWhoInput(true)}
+                        className="border border-dashed border-gray-300 px-2.5 py-1 rounded-md text-[11px] text-gray-500 hover:border-[#1D9E75] hover:text-[#1D9E75]"
+                      >
+                        + 항목 추가
+                      </button>
+                    )}
+                  </div>
+                </div>
               </div>
 
               {/* 핵심 고통 */}
